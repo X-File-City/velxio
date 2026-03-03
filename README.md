@@ -1,86 +1,86 @@
 # Arduino Emulator - Wokwi Clone
 
-Emulador local de Arduino con editor de código y simulador visual.
+Local Arduino emulator with code editor and visual simulator.
 
-## Características
+## Features
 
-- ✅ Editor de código con syntax highlighting (Monaco Editor)
-- ✅ Compilación de código Arduino con arduino-cli
-- ✅ **Repositorios oficiales de Wokwi clonados localmente**
-  - ✅ **wokwi-elements** - Componentes web electrónicos
-  - ✅ **avr8js** - Emulador AVR8
-  - ✅ **rp2040js** - Emulador RP2040 (futuro)
-- ✅ Componentes visuales usando wokwi-elements (Arduino Uno, LEDs, etc.)
-- ⏳ Emulación completa con avr8js (en progreso)
-- ⏳ Persistencia con SQLite (próximamente)
+- ✅ Code editor with syntax highlighting (Monaco Editor)
+- ✅ Arduino code compilation with arduino-cli
+- ✅ **Official Wokwi repositories cloned locally**
+  - ✅ **wokwi-elements** - Electronic web components
+  - ✅ **avr8js** - AVR8 emulator
+  - ✅ **rp2040js** - RP2040 emulator (future)
+- ✅ Visual components using wokwi-elements (Arduino Uno, LEDs, etc.)
+- ⏳ Full emulation with avr8js (in progress)
+- ⏳ SQLite persistence (coming soon)
 
-## Requisitos Previos
+## Prerequisites
 
 ### 1. Node.js
-- Versión 18 o superior
-- Descargar desde: https://nodejs.org/
+- Version 18 or higher
+- Download from: https://nodejs.org/
 
 ### 2. Python
-- Versión 3.12 o superior
-- Descargar desde: https://www.python.org/
+- Version 3.12 or higher
+- Download from: https://www.python.org/
 
 ### 3. Arduino CLI
-Instalar arduino-cli en tu sistema:
+Install arduino-cli on your system:
 
-**Windows (con Chocolatey):**
+**Windows (with Chocolatey):**
 ```bash
 choco install arduino-cli
 ```
 
 **Windows (manual):**
-1. Descargar desde: https://github.com/arduino/arduino-cli/releases
-2. Añadir al PATH del sistema
+1. Download from: https://github.com/arduino/arduino-cli/releases
+2. Add to system PATH
 
-**Verificar instalación:**
+**Verify installation:**
 ```bash
 arduino-cli version
 ```
 
-**Inicializar arduino-cli:**
+**Initialize arduino-cli:**
 ```bash
 arduino-cli core update-index
 arduino-cli core install arduino:avr
 ```
 
-## Instalación
+## Installation
 
-### 1. Clonar el repositorio
+### 1. Clone the repository
 ```bash
 cd e:\Hardware\wokwi_clon
 ```
 
-### 2. Configurar el Backend
+### 2. Setup Backend
 
 ```bash
 cd backend
 
-# Crear entorno virtual
+# Create virtual environment
 python -m venv venv
 
-# Activar entorno virtual (Windows)
+# Activate virtual environment (Windows)
 venv\Scripts\activate
 
-# Instalar dependencias
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 3. Configurar el Frontend
+### 3. Setup Frontend
 
 ```bash
 cd frontend
 
-# Instalar dependencias
+# Install dependencies
 npm install
 ```
 
-## Ejecución
+## Running
 
-### Iniciar el Backend
+### Start Backend
 
 ```bash
 cd backend
@@ -88,120 +88,120 @@ venv\Scripts\activate
 uvicorn app.main:app --reload --port 8001
 ```
 
-El backend estará disponible en:
+The backend will be available at:
 - API: http://localhost:8001
-- Documentación: http://localhost:8001/docs
+- Documentation: http://localhost:8001/docs
 
-### Iniciar el Frontend
+### Start Frontend
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-El frontend estará disponible en:
+The frontend will be available at:
 - App: http://localhost:5173
 
-## Uso
+## Usage
 
-1. Abre http://localhost:5173 en tu navegador
-2. Escribe código Arduino en el editor (hay un ejemplo de Blink por defecto)
-3. Click en "Compile" para compilar el código
-4. Si la compilación es exitosa, click en "Run" para iniciar la simulación
-5. Observa el LED simulado parpadeando
+1. Open http://localhost:5173 in your browser
+2. Write Arduino code in the editor (there's a Blink example by default)
+3. Click "Compile" to compile the code
+4. If compilation is successful, click "Run" to start the simulation
+5. Watch the simulated LED blinking
 
-## Estructura del Proyecto
+## Project Structure
 
 ```
 wokwi_clon/
 ├── frontend/                    # React + Vite
 │   ├── src/
-│   │   ├── components/          # Componentes React
-│   │   │   ├── components-wokwi/  # Wrappers de wokwi-elements
-│   │   │   ├── editor/          # Editor Monaco
-│   │   │   └── simulator/       # Canvas de simulación
-│   │   ├── store/               # Estado global (Zustand)
+│   │   ├── components/          # React components
+│   │   │   ├── components-wokwi/  # wokwi-elements wrappers
+│   │   │   ├── editor/          # Monaco Editor
+│   │   │   └── simulator/       # Simulation canvas
+│   │   ├── store/               # Global state (Zustand)
 │   │   ├── services/            # API clients
-│   │   └── App.tsx              # Componente principal
+│   │   └── App.tsx              # Main component
 │   └── package.json
 │
 ├── backend/                     # FastAPI + Python
 │   ├── app/
-│   │   ├── api/routes/          # Endpoints REST
-│   │   ├── services/            # Lógica de negocio
+│   │   ├── api/routes/          # REST endpoints
+│   │   ├── services/            # Business logic
 │   │   └── main.py              # Entry point
 │   └── requirements.txt
 │
-├── wokwi-libs/                  # Repositorios de Wokwi clonados
+├── wokwi-libs/                  # Cloned Wokwi repositories
 │   ├── wokwi-elements/          # Web Components
-│   ├── avr8js/                  # Emulador AVR8
-│   ├── rp2040js/                # Emulador RP2040
-│   └── wokwi-features/          # Features y documentación
+│   ├── avr8js/                  # AVR8 Emulator
+│   ├── rp2040js/                # RP2040 Emulator
+│   └── wokwi-features/          # Features and documentation
 │
 ├── README.md
-├── WOKWI_LIBS.md                # Documentación de integración Wokwi
-└── update-wokwi-libs.bat        # Script de actualización
+├── WOKWI_LIBS.md                # Wokwi integration documentation
+└── update-wokwi-libs.bat        # Update script
 ```
 
-## Tecnologías Utilizadas
+## Technologies Used
 
 ### Frontend
-- **React** 18 - Framework UI
+- **React** 18 - UI framework
 - **Vite** 5 - Build tool
-- **TypeScript** - Tipado estático
-- **Monaco Editor** - Editor de código (VSCode)
+- **TypeScript** - Static typing
+- **Monaco Editor** - Code editor (VSCode)
 - **Zustand** - State management
 - **Axios** - HTTP client
 
 ### Backend
-- **FastAPI** - Framework web Python
+- **FastAPI** - Python web framework
 - **uvicorn** - ASGI server
-- **arduino-cli** - Compilador Arduino
-- **SQLAlchemy** - ORM (próximamente)
-- **SQLite** - Base de datos (próximamente)
+- **arduino-cli** - Arduino compiler
+- **SQLAlchemy** - ORM (coming soon)
+- **SQLite** - Database (coming soon)
 
-### Simulación
-- **avr8js** - Emulador AVR8 (próximamente)
-- **@wokwi/elements** - Componentes electrónicos (próximamente)
+### Simulation
+- **avr8js** - AVR8 emulator (coming soon)
+- **@wokwi/elements** - Electronic components (coming soon)
 
-## Próximas Funcionalidades
+## Upcoming Features
 
-### Fase 2: Emulación Real con avr8js
-- [ ] Integrar avr8js para emulación real del ATmega328p
-- [ ] Parser de archivos .hex
-- [ ] PinManager para gestión de pines
-- [ ] Ejecución en tiempo real
+### Phase 2: Real Emulation with avr8js
+- [ ] Integrate avr8js for real ATmega328p emulation
+- [ ] .hex file parser
+- [ ] PinManager for pin management
+- [ ] Real-time execution
 
-### Fase 3: Componentes Visuales
-- [ ] Integrar @wokwi/elements
-- [ ] Componente LED con estado real
-- [ ] Componente Resistor
-- [ ] Drag & drop de componentes
-- [ ] Conexiones visuales (wires)
+### Phase 3: Visual Components
+- [ ] Integrate @wokwi/elements
+- [ ] LED component with real state
+- [ ] Resistor component
+- [ ] Component drag & drop
+- [ ] Visual connections (wires)
 
-### Fase 4: Persistencia
-- [ ] Base de datos SQLite
-- [ ] CRUD de proyectos
-- [ ] Guardar/cargar código y circuito
-- [ ] Historial de proyectos
+### Phase 4: Persistence
+- [ ] SQLite database
+- [ ] Project CRUD
+- [ ] Save/load code and circuit
+- [ ] Project history
 
-### Fase 5: Funcionalidades Avanzadas
-- [ ] Más componentes (botones, potenciómetros, sensores)
+### Phase 5: Advanced Features
+- [ ] More components (buttons, potentiometers, sensors)
 - [ ] Serial monitor
-- [ ] Control de velocidad de simulación
-- [ ] Proyectos de ejemplo
-- [ ] Exportar/importar proyectos
+- [ ] Simulation speed control
+- [ ] Example projects
+- [ ] Export/import projects
 
-## Actualizar Librerías de Wokwi
+## Update Wokwi Libraries
 
-Este proyecto usa los repositorios oficiales de Wokwi clonados localmente. Para obtener las últimas actualizaciones:
+This project uses official Wokwi repositories cloned locally. To get the latest updates:
 
 ```bash
-# Ejecutar script de actualización
+# Run update script
 update-wokwi-libs.bat
 ```
 
-O manualmente:
+Or manually:
 
 ```bash
 cd wokwi-libs/wokwi-elements
@@ -210,38 +210,38 @@ npm install
 npm run build
 ```
 
-Ver [WOKWI_LIBS.md](WOKWI_LIBS.md) para más detalles sobre la integración con Wokwi.
+See [WOKWI_LIBS.md](WOKWI_LIBS.md) for more details about Wokwi integration.
 
-## Solución de Problemas
+## Troubleshooting
 
 ### Error: "arduino-cli: command not found"
-- Asegúrate de tener arduino-cli instalado y en el PATH
-- Verifica con: `arduino-cli version`
+- Make sure arduino-cli is installed and in PATH
+- Verify with: `arduino-cli version`
 
 ### Error: "arduino:avr core not found"
-- Ejecuta: `arduino-cli core install arduino:avr`
+- Run: `arduino-cli core install arduino:avr`
 
-### El frontend no conecta con el backend
-- Verifica que el backend esté corriendo en http://localhost:8001
-- Verifica los logs de CORS en la consola del navegador
+### Frontend doesn't connect to backend
+- Verify backend is running at http://localhost:8001
+- Check CORS logs in browser console
 
-### Errores de compilación
-- Revisa la consola del backend para ver los logs de arduino-cli
-- Asegúrate de que el código Arduino sea válido
-- Verifica que tienes instalado el core `arduino:avr`
+### Compilation errors
+- Check backend console for arduino-cli logs
+- Make sure Arduino code is valid
+- Verify you have the `arduino:avr` core installed
 
-## Contribuir
+## Contributing
 
-Este es un proyecto educativo. Sugerencias y mejoras son bienvenidas!
+This is an educational project. Suggestions and improvements are welcome!
 
-## Licencia
+## License
 
 MIT
 
-## Referencias
+## References
 
-- [Wokwi](https://wokwi.com) - Inspiración del proyecto
-- [avr8js](https://github.com/wokwi/avr8js) - Emulador AVR8
-- [wokwi-elements](https://github.com/wokwi/wokwi-elements) - Componentes web
-- [arduino-cli](https://github.com/arduino/arduino-cli) - Compilador Arduino
-- [Monaco Editor](https://microsoft.github.io/monaco-editor/) - Editor de código
+- [Wokwi](https://wokwi.com) - Project inspiration
+- [avr8js](https://github.com/wokwi/avr8js) - AVR8 emulator
+- [wokwi-elements](https://github.com/wokwi/wokwi-elements) - Web components
+- [arduino-cli](https://github.com/arduino/arduino-cli) - Arduino compiler
+- [Monaco Editor](https://microsoft.github.io/monaco-editor/) - Code editor
