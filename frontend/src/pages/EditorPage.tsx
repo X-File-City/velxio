@@ -7,12 +7,17 @@ import { Link } from 'react-router-dom';
 import { CodeEditor } from '../components/editor/CodeEditor';
 import { EditorToolbar } from '../components/editor/EditorToolbar';
 import { SimulatorCanvas } from '../components/simulator/SimulatorCanvas';
+import { SerialMonitor } from '../components/simulator/SerialMonitor';
+import { useSimulatorStore } from '../store/useSimulatorStore';
 import '../App.css';
 
 export const EditorPage: React.FC = () => {
   const [editorWidthPct, setEditorWidthPct] = useState(45);
   const containerRef = useRef<HTMLDivElement>(null);
   const resizingRef = useRef(false);
+  const serialMonitorOpen = useSimulatorStore((s) => s.serialMonitorOpen);
+  const toggleSerialMonitor = useSimulatorStore((s) => s.toggleSerialMonitor);
+  const [serialHeightPct, setSerialHeightPct] = useState(30);
 
   const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,6 +63,29 @@ export const EditorPage: React.FC = () => {
             </svg>
             Examples
           </Link>
+          <button
+            onClick={toggleSerialMonitor}
+            className="serial-monitor-toggle"
+            title="Toggle Serial Monitor"
+            style={{
+              background: serialMonitorOpen ? '#0e639c' : 'transparent',
+              border: '1px solid #555',
+              color: '#ccc',
+              padding: '4px 10px',
+              borderRadius: 4,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              fontSize: 13,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <path d="M8 21h8M12 17v4" />
+            </svg>
+            Serial
+          </button>
         </div>
       </header>
 
@@ -74,8 +102,15 @@ export const EditorPage: React.FC = () => {
           <div className="resize-handle-grip" />
         </div>
 
-        <div className="simulator-panel" style={{ width: `${100 - editorWidthPct}%` }}>
-          <SimulatorCanvas />
+        <div className="simulator-panel" style={{ width: `${100 - editorWidthPct}%`, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: serialMonitorOpen ? `0 0 ${100 - serialHeightPct}%` : '1 1 auto', overflow: 'hidden', position: 'relative' }}>
+            <SimulatorCanvas />
+          </div>
+          {serialMonitorOpen && (
+            <div style={{ flex: `0 0 ${serialHeightPct}%`, minHeight: 100, display: 'flex', flexDirection: 'column' }}>
+              <SerialMonitor />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,8 @@
-import { CPU, AVRTimer, timer0Config, timer1Config, timer2Config, AVRUSART, usart0Config, AVRIOPort, portBConfig, portCConfig, portDConfig, avrInstruction, AVRADC, adcConfig, AVRSPI, spiConfig } from 'avr8js';
+import { CPU, AVRTimer, timer0Config, timer1Config, timer2Config, AVRUSART, usart0Config, AVRIOPort, portBConfig, portCConfig, portDConfig, avrInstruction, AVRADC, adcConfig, AVRSPI, spiConfig, AVRTWI, twiConfig } from 'avr8js';
 import { PinManager } from './PinManager';
 import { hexToUint8Array } from '../utils/hexParser';
+import { I2CBusManager } from './I2CBusManager';
+import type { I2CDevice } from './I2CBusManager';
 
 /**
  * AVRSimulator - Emulates Arduino Uno (ATmega328p) using avr8js
@@ -34,11 +36,17 @@ export class AVRSimulator {
   private portD: AVRIOPort | null = null;
   private adc: AVRADC | null = null;
   public spi: AVRSPI | null = null;
+  public usart: AVRUSART | null = null;
+  public twi: AVRTWI | null = null;
+  public i2cBus: I2CBusManager | null = null;
   private program: Uint16Array | null = null;
   private running = false;
   private animationFrame: number | null = null;
   public pinManager: PinManager;
   private speed = 1.0; // Simulation speed multiplier
+
+  /** Serial output buffer — subscribers receive each byte or line */
+  public onSerialData: ((char: string) => void) | null = null;
   private lastPortBValue = 0;
   private lastPortCValue = 0;
   private lastPortDValue = 0;
@@ -79,12 +87,25 @@ export class AVRSimulator {
       this.spi!.completeTransfer(value);
     };
 
+    // USART (Serial) — hook onByteTransmit to forward output
+    this.usart = new AVRUSART(this.cpu, usart0Config, 16000000);
+    this.usart.onByteTransmit = (value: number) => {
+      if (this.onSerialData) {
+        this.onSerialData(String.fromCharCode(value));
+      }
+    };
+
+    // TWI (I2C)
+    this.twi = new AVRTWI(this.cpu, twiConfig, 16000000);
+    this.i2cBus = new I2CBusManager(this.twi);
+
     this.peripherals = [
       new AVRTimer(this.cpu, timer0Config),
       new AVRTimer(this.cpu, timer1Config),
       new AVRTimer(this.cpu, timer2Config),
-      new AVRUSART(this.cpu, usart0Config, 16000000),
+      this.usart,
       this.spi,
+      this.twi,
     ];
 
     // Initialize ADC (analogRead support)
@@ -233,11 +254,25 @@ export class AVRSimulator {
       console.log('Resetting AVR CPU...');
 
       this.cpu = new CPU(this.program);
+
+      this.spi = new AVRSPI(this.cpu, spiConfig, 16000000);
+      this.spi.onByte = (value) => { this.spi!.completeTransfer(value); };
+
+      this.usart = new AVRUSART(this.cpu, usart0Config, 16000000);
+      this.usart.onByteTransmit = (value: number) => {
+        if (this.onSerialData) this.onSerialData(String.fromCharCode(value));
+      };
+
+      this.twi = new AVRTWI(this.cpu, twiConfig, 16000000);
+      this.i2cBus = new I2CBusManager(this.twi);
+
       this.peripherals = [
         new AVRTimer(this.cpu, timer0Config),
         new AVRTimer(this.cpu, timer1Config),
         new AVRTimer(this.cpu, timer2Config),
-        new AVRUSART(this.cpu, usart0Config, 16000000),
+        this.usart,
+        this.spi,
+        this.twi,
       ];
       this.adc = new AVRADC(this.cpu, adcConfig);
 
@@ -285,6 +320,25 @@ export class AVRSimulator {
       this.portB.setPin(arduinoPin - 8, state);
     } else if (arduinoPin >= 14 && arduinoPin <= 19 && this.portC) {
       this.portC.setPin(arduinoPin - 14, state);
+    }
+  }
+
+  /**
+   * Send a byte to the Arduino serial port (RX) — as if typed in the Serial Monitor.
+   */
+  serialWrite(text: string): void {
+    if (!this.usart) return;
+    for (let i = 0; i < text.length; i++) {
+      this.usart.writeByte(text.charCodeAt(i));
+    }
+  }
+
+  /**
+   * Register a virtual I2C device on the bus (e.g. RTC, sensor).
+   */
+  addI2CDevice(device: I2CDevice): void {
+    if (this.i2cBus) {
+      this.i2cBus.addDevice(device);
     }
   }
 }
