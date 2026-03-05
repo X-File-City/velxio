@@ -15,4 +15,14 @@ export default defineConfig({
   optimizeDeps: {
     include: ['avr8js', 'rp2040js', '@wokwi/elements'],
   },
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['src/__tests__/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/simulation/**/*.ts'],
+      reporter: ['text', 'html'],
+    },
+  },
 })

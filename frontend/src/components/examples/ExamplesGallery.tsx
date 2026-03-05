@@ -31,14 +31,70 @@ export const ExamplesGallery: React.FC<ExamplesGalleryProps> = ({ onLoadExample 
     return categoryMatch && difficultyMatch;
   });
 
-  const getCategoryIcon = (category: ExampleProject['category']): string => {
-    const icons: Record<ExampleProject['category'], string> = {
-      basics: '💡',
-      sensors: '📡',
-      displays: '📺',
-      communication: '📶',
-      games: '🎮',
-      robotics: '🤖',
+  const getCategoryIcon = (category: ExampleProject['category']): React.ReactNode => {
+    const svgProps = {
+      width: 16,
+      height: 16,
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      strokeWidth: 2,
+      strokeLinecap: 'round' as const,
+      strokeLinejoin: 'round' as const,
+      style: { display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 },
+    };
+
+    const icons: Record<ExampleProject['category'], React.ReactNode> = {
+      basics: (
+        <svg {...svgProps}>
+          <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+          <path d="M9 18h6" />
+          <path d="M10 22h4" />
+        </svg>
+      ),
+      sensors: (
+        <svg {...svgProps}>
+          <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9" />
+          <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5" />
+          <circle cx="12" cy="12" r="2" />
+          <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5" />
+          <path d="M19.1 4.9C23 8.8 23 15.1 19.1 19" />
+        </svg>
+      ),
+      displays: (
+        <svg {...svgProps}>
+          <rect x="2" y="3" width="20" height="14" rx="2" />
+          <line x1="8" y1="21" x2="16" y2="21" />
+          <line x1="12" y1="17" x2="12" y2="21" />
+        </svg>
+      ),
+      communication: (
+        <svg {...svgProps}>
+          <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+          <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+          <circle cx="12" cy="20" r="1" fill="currentColor" />
+        </svg>
+      ),
+      games: (
+        <svg {...svgProps}>
+          <line x1="6" y1="11" x2="10" y2="11" />
+          <line x1="8" y1="9" x2="8" y2="13" />
+          <circle cx="15" cy="12" r="1" fill="currentColor" />
+          <circle cx="17" cy="10" r="1" fill="currentColor" />
+          <path d="M17 2H7a5 5 0 0 0-5 5v4.4A2.9 2.9 0 0 0 4.8 14l1.5 2.7A3 3 0 0 0 9 18h6a3 3 0 0 0 2.7-1.3l1.5-2.7a2.9 2.9 0 0 0 .3-1.3V7a5 5 0 0 0-5-5Z" />
+        </svg>
+      ),
+      robotics: (
+        <svg {...svgProps}>
+          <path d="M12 8V4H8" />
+          <rect width="16" height="12" x="4" y="8" rx="2" />
+          <path d="M2 14h2" />
+          <path d="M20 14h2" />
+          <path d="M15 13v2" />
+          <path d="M9 13v2" />
+        </svg>
+      ),
     };
     return icons[category];
   };

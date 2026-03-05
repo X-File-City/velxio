@@ -130,7 +130,7 @@ export const WireRenderer: React.FC<WireRendererProps> = ({ wire, isSelected }) 
             offset = mouseX - startMousePos.x;
           }
 
-          console.log('🎯 Drag Update:', {
+          console.log('Drag Update:', {
             segmentId: segment.id,
             orientation: segment.orientation,
             offset,
@@ -148,7 +148,7 @@ export const WireRenderer: React.FC<WireRendererProps> = ({ wire, isSelected }) 
             offset
           );
 
-          console.log('📍 New Ortho Points:', newOrthoPoints);
+          console.log('New Ortho Points:', newOrthoPoints);
 
           // Update preview state (doesn't touch the store)
           setPreviewOrthoPoints(newOrthoPoints);
@@ -185,7 +185,7 @@ export const WireRenderer: React.FC<WireRendererProps> = ({ wire, isSelected }) 
       const pathPoints = getPathPoints(wire);
       const orthoPoints = generateOrthogonalPoints(pathPoints);
 
-      console.log('🚀 Start Dragging Segment:', {
+      console.log('Start Dragging Segment:', {
         segmentId: segment.id,
         orientation: segment.orientation,
         segmentStart: segment.startPoint,
@@ -207,7 +207,7 @@ export const WireRenderer: React.FC<WireRendererProps> = ({ wire, isSelected }) 
   );
 
   const handleMouseUp = useCallback(() => {
-    console.log('🖱️ Mouse Up - Drag State:', {
+    console.log('Mouse Up - Drag State:', {
       hasDragState: !!dragState,
       hasPreviewPoints: !!previewOrthoPoints,
       previewPointsCount: previewOrthoPoints?.length,
@@ -223,7 +223,7 @@ export const WireRenderer: React.FC<WireRendererProps> = ({ wire, isSelected }) 
         y: Math.round(p.y / GRID_SIZE) * GRID_SIZE,
       }));
 
-      console.log('📐 Snapped Points:', snappedPoints);
+      console.log('Snapped Points:', snappedPoints);
 
       // Convert back to control points
       const newControlPoints = orthogonalPointsToControlPoints(
@@ -232,8 +232,8 @@ export const WireRenderer: React.FC<WireRendererProps> = ({ wire, isSelected }) 
         wire.end
       );
 
-      console.log('🔧 New Control Points:', newControlPoints);
-      console.log('🔌 Wire Endpoints:', {
+      console.log('New Control Points:', newControlPoints);
+      console.log('Wire Endpoints:', {
         start: wire.start,
         end: wire.end,
       });

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import compile
+from app.api.routes import compile, libraries
 
 app = FastAPI(
     title="Arduino Emulator API",
@@ -19,6 +19,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(compile.router, prefix="/api/compile", tags=["compilation"])
+app.include_router(libraries.router, prefix="/api/libraries", tags=["libraries"])
 
 
 @app.get("/")

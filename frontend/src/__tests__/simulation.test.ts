@@ -3,9 +3,17 @@
  * Tests AVRSimulator, PinManager, and component integration
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AVRSimulator } from '../simulation/AVRSimulator';
 import { PinManager } from '../simulation/PinManager';
+
+// requestAnimationFrame is not available in Node — mock it as a no-op
+beforeEach(() => {
+  let counter = 0;
+  vi.stubGlobal('requestAnimationFrame', (_cb: FrameRequestCallback) => ++counter);
+  vi.stubGlobal('cancelAnimationFrame', vi.fn());
+});
+afterEach(() => vi.unstubAllGlobals());
 
 describe('PinManager', () => {
   let pinManager: PinManager;

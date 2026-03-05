@@ -46,9 +46,9 @@ export class ComponentRegistry {
       this.processMetadata(data.components);
       this.loaded = true;
 
-      console.log(`✅ Loaded ${this.allComponents.length} components from metadata`);
+      console.log(`Loaded ${this.allComponents.length} components from metadata`);
     } catch (error) {
-      console.error('❌ Failed to load component metadata:', error);
+      console.error('Failed to load component metadata:', error);
       // Continue with empty registry - app should still work with manual component addition
     }
   }

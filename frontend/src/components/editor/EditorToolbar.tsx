@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useSimulatorStore, BOARD_FQBN } from '../../store/useSimulatorStore';
 import { compileCode } from '../../services/compilation';
+import { LibraryManagerModal } from '../simulator/LibraryManagerModal';
 import './EditorToolbar.css';
 
 export const EditorToolbar = () => {
@@ -18,40 +19,29 @@ export const EditorToolbar = () => {
   } = useSimulatorStore();
   const [compiling, setCompiling] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [libManagerOpen, setLibManagerOpen] = useState(false);
 
   const handleCompile = async () => {
     setCompiling(true);
     setMessage(null);
-
     try {
       const fqbn = BOARD_FQBN[boardType];
-      console.log('Starting compilation for board:', fqbn);
       const result = await compileCode(code, fqbn);
-      console.log('Compilation result:', result);
-
       if (result.success) {
         if (result.hex_content) {
-          // AVR path
           setCompiledHex(result.hex_content);
-          setMessage({ type: 'success', text: 'Compilation successful! Ready to run.' });
+          setMessage({ type: 'success', text: 'Compiled successfully' });
         } else if (result.binary_content) {
-          // RP2040 path
           setCompiledBinary(result.binary_content);
-          setMessage({ type: 'success', text: 'Compilation successful! Ready to run.' });
+          setMessage({ type: 'success', text: 'Compiled successfully' });
         } else {
-          setMessage({ type: 'error', text: 'Compilation produced no output' });
+          setMessage({ type: 'error', text: 'No output' });
         }
       } else {
-        const errorMsg = result.error || result.stderr || 'Compilation failed';
-        console.error('Compilation error:', errorMsg);
-        setMessage({ type: 'error', text: errorMsg });
+        setMessage({ type: 'error', text: result.error || result.stderr || 'Compile failed' });
       }
     } catch (err) {
-      console.error('Compilation exception:', err);
-      setMessage({
-        type: 'error',
-        text: err instanceof Error ? err.message : 'Compilation failed',
-      });
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Compile failed' });
     } finally {
       setCompiling(false);
     }
@@ -60,45 +50,124 @@ export const EditorToolbar = () => {
   const handleRun = () => {
     if (compiledHex) {
       startSimulation();
-      setMessage({ type: 'success', text: 'Simulation started' });
+      setMessage(null);
     } else {
-      setMessage({ type: 'error', text: 'Please compile the code first' });
+      setMessage({ type: 'error', text: 'Compile first' });
     }
   };
 
   const handleStop = () => {
     stopSimulation();
-    setMessage({ type: 'success', text: 'Simulation stopped' });
+    setMessage(null);
   };
 
   const handleReset = () => {
     resetSimulation();
-    setMessage({ type: 'success', text: 'Simulation reset' });
+    setMessage(null);
   };
 
   return (
-    <div className="editor-toolbar">
-      <div className="toolbar-buttons">
-        <button onClick={handleCompile} disabled={compiling} className="btn btn-primary">
-          {compiling ? 'Compiling...' : 'Compile'}
-        </button>
-        <button
-          onClick={handleRun}
-          disabled={running || !compiledHex}
-          className="btn btn-success"
-        >
-          Run
-        </button>
-        <button onClick={handleStop} disabled={!running} className="btn btn-danger">
-          Stop
-        </button>
-        <button onClick={handleReset} disabled={!compiledHex} className="btn btn-secondary">
-          Reset
-        </button>
+    <>
+      <div className="editor-toolbar">
+        <div className="toolbar-group">
+          {/* Compile */}
+          <button
+            onClick={handleCompile}
+            disabled={compiling}
+            className="tb-btn tb-btn-compile"
+            title={compiling ? 'Compiling…' : 'Compile (Ctrl+B)'}
+          >
+            {compiling ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="spin">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+            )}
+          </button>
+
+          <div className="tb-divider" />
+
+          {/* Run */}
+          <button
+            onClick={handleRun}
+            disabled={running || !compiledHex}
+            className="tb-btn tb-btn-run"
+            title="Run"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <polygon points="5,3 19,12 5,21" />
+            </svg>
+          </button>
+
+          {/* Stop */}
+          <button
+            onClick={handleStop}
+            disabled={!running}
+            className="tb-btn tb-btn-stop"
+            title="Stop"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+            </svg>
+          </button>
+
+          {/* Reset */}
+          <button
+            onClick={handleReset}
+            disabled={!compiledHex}
+            className="tb-btn tb-btn-reset"
+            title="Reset"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="toolbar-group toolbar-group-right">
+          {/* Status message */}
+          {message && (
+            <span className={`tb-status tb-status-${message.type}`} title={message.text}>
+              {message.type === 'success' ? (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              ) : (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              )}
+              <span className="tb-status-text">{message.text}</span>
+            </span>
+          )}
+
+          {/* Libraries */}
+          <button
+            onClick={() => setLibManagerOpen(true)}
+            className="tb-btn tb-btn-lib"
+            title="Library Manager"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+              <path d="m3.3 7 8.7 5 8.7-5" />
+              <path d="M12 22V12" />
+            </svg>
+          </button>
+        </div>
       </div>
-      {message && (
-        <div className={`toolbar-message ${message.type}`}>{message.text}</div>
+
+      {/* Error detail bar */}
+      {message?.type === 'error' && message.text.length > 40 && (
+        <div className="toolbar-error-detail">{message.text}</div>
       )}
-    </div>
+
+      <LibraryManagerModal isOpen={libManagerOpen} onClose={() => setLibManagerOpen(false)} />
+    </>
   );
 };
