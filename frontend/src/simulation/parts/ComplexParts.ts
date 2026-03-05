@@ -554,3 +554,185 @@ function createLcdSimulation(cols: number, rows: number) {
 
 PartSimulationRegistry.register('lcd1602', createLcdSimulation(16, 2));
 PartSimulationRegistry.register('lcd2004', createLcdSimulation(20, 4));
+
+// ─── ILI9341 TFT Display (SPI) ───────────────────────────────────────────────
+
+/**
+ * ILI9341 TFT display simulation via hardware SPI.
+ *
+ * Intercepts writes to SPDR (via AVRSPI) and decodes ILI9341 commands:
+ *   - 0x2A CASET  – set column address window
+ *   - 0x2B PASET  – set page (row) address window
+ *   - 0x2C RAMWR  – stream RGB-565 pixel data
+ *   - 0x01 SWRESET – clear display
+ *   - All others are silently accepted (init sequences, DISPON, MADCTL…)
+ *
+ * DC/RS pin: LOW = command byte, HIGH = data bytes.
+ */
+PartSimulationRegistry.register('ili9341', {
+    attachEvents: (element, avrSimulator, getArduinoPinHelper) => {
+        const el = element as any;
+        const pinManager = (avrSimulator as any).pinManager;
+        const spi = (avrSimulator as any).spi;
+
+        if (!pinManager || !spi) {
+            console.warn('[ILI9341] pinManager or SPI peripheral not available');
+            return () => {};
+        }
+
+        // ── Canvas setup ──────────────────────────────────────────────────
+        const SCREEN_W = 240;
+        const SCREEN_H = 320;
+
+        const initCanvas = (): CanvasRenderingContext2D | null => {
+            // el.canvas is the getter defined in ili9341-element.ts:
+            //   get canvas() { return this.shadowRoot?.querySelector('canvas'); }
+            // The element already sets width=240 height=320 in its LitElement template.
+            const canvas = el.canvas as HTMLCanvasElement | null;
+            if (!canvas) return null;
+            return canvas.getContext('2d');
+        };
+
+        let ctx = initCanvas();
+
+        const onCanvasReady = () => { ctx = initCanvas(); };
+        el.addEventListener('canvas-ready', onCanvasReady);
+
+        // ── Shared ImageData buffer ───────────────────────────────────────
+        // Accumulate pixels here; flush to canvas once per animation frame.
+        let imageData: ImageData | null = null;
+
+        const getOrCreateImageData = (): ImageData => {
+            if (!ctx) ctx = initCanvas();
+            if (!imageData && ctx) imageData = ctx.createImageData(SCREEN_W, SCREEN_H);
+            return imageData!;
+        };
+
+        let pendingFlush = false;
+        let rafId: number | null = null;
+
+        const scheduleFlush = () => {
+            if (rafId !== null) return;
+            rafId = requestAnimationFrame(() => {
+                rafId = null;
+                if (pendingFlush && ctx && imageData) {
+                    ctx.putImageData(imageData, 0, 0);
+                    pendingFlush = false;
+                }
+            });
+        };
+
+        // ── ILI9341 state ─────────────────────────────────────────────────
+        let colStart = 0, colEnd = SCREEN_W - 1;
+        let rowStart = 0, rowEnd = SCREEN_H - 1;
+        let curX = 0, curY = 0;
+
+        let currentCmd = -1;
+        let dataBytes: number[] = [];
+        let inRamWrite = false;
+        let pixelHiByte = 0;
+        let pixelByteCount = 0;
+
+        // ── DC pin tracking ───────────────────────────────────────────────
+        let dcState = false; // LOW = command, HIGH = data
+        const pinDC = getArduinoPinHelper('D/C');
+
+        const unsubscribers: (() => void)[] = [];
+
+        if (pinDC !== null) {
+            unsubscribers.push(
+                pinManager.onPinChange(pinDC, (_: number, s: boolean) => { dcState = s; })
+            );
+        }
+
+        // ── Pixel writer ──────────────────────────────────────────────────
+        const writePixel = (hi: number, lo: number) => {
+            if (curX > colEnd || curY > rowEnd || curY >= SCREEN_H || curX >= SCREEN_W) return;
+
+            const id = getOrCreateImageData();
+            const color = (hi << 8) | lo;
+            const r = ((color >> 11) & 0x1F) * 8;
+            const g = ((color >> 5)  & 0x3F) * 4;
+            const b = ( color        & 0x1F) * 8;
+
+            const idx = (curY * SCREEN_W + curX) * 4;
+            id.data[idx]     = r;
+            id.data[idx + 1] = g;
+            id.data[idx + 2] = b;
+            id.data[idx + 3] = 255;
+
+            pendingFlush = true;
+            curX++;
+            if (curX > colEnd) {
+                curX = colStart;
+                curY++;
+            }
+        };
+
+        // ── Command / data processing ─────────────────────────────────────
+        const processCommand = (cmd: number) => {
+            currentCmd = cmd;
+            dataBytes   = [];
+            inRamWrite  = (cmd === 0x2C);
+            pixelByteCount = 0;
+
+            if (cmd === 0x01) { // SWRESET – clear framebuffer
+                colStart = 0; colEnd = SCREEN_W - 1;
+                rowStart = 0; rowEnd = SCREEN_H - 1;
+                curX = 0;     curY  = 0;
+                imageData = null;
+                if (ctx) ctx.clearRect(0, 0, SCREEN_W, SCREEN_H);
+            }
+        };
+
+        const processData = (value: number) => {
+            if (inRamWrite) {
+                // RGB-565: two bytes per pixel
+                if (pixelByteCount === 0) {
+                    pixelHiByte = value;
+                    pixelByteCount = 1;
+                } else {
+                    writePixel(pixelHiByte, value);
+                    scheduleFlush();
+                    pixelByteCount = 0;
+                }
+                return;
+            }
+
+            dataBytes.push(value);
+            switch (currentCmd) {
+                case 0x2A: // CASET – column address set
+                    if (dataBytes.length === 2) colStart = (dataBytes[0] << 8) | dataBytes[1];
+                    if (dataBytes.length === 4) { colEnd = (dataBytes[2] << 8) | dataBytes[3]; curX = colStart; }
+                    break;
+                case 0x2B: // PASET – page address set
+                    if (dataBytes.length === 2) rowStart = (dataBytes[0] << 8) | dataBytes[1];
+                    if (dataBytes.length === 4) { rowEnd = (dataBytes[2] << 8) | dataBytes[3]; curY = rowStart; }
+                    break;
+                // All other commands (DISPON, MADCTL, COLMOD…) just buffer data
+            }
+        };
+
+        // ── Intercept SPI ─────────────────────────────────────────────────
+        const prevOnByte = spi.onByte.bind(spi);
+
+        spi.onByte = (value: number) => {
+            if (!dcState) {
+                processCommand(value);
+            } else {
+                processData(value);
+            }
+            spi.completeTransfer(0xFF); // Unblock CPU immediately
+        };
+
+        console.log(`[ILI9341] SPI simulation ready. DC→pin${pinDC}`);
+
+        // ── Cleanup ───────────────────────────────────────────────────────
+        return () => {
+            spi.onByte = prevOnByte;
+            if (rafId !== null) cancelAnimationFrame(rafId);
+            el.removeEventListener('canvas-ready', onCanvasReady);
+            unsubscribers.forEach(u => u());
+        };
+    },
+});

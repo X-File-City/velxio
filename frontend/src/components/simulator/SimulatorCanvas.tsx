@@ -39,6 +39,14 @@ export const SimulatorCanvas = () => {
   // Component picker modal
   const [showComponentPicker, setShowComponentPicker] = useState(false);
   const [registry] = useState(() => ComponentRegistry.getInstance());
+  const [registryLoaded, setRegistryLoaded] = useState(registry.isLoaded);
+
+  // Wait for registry to finish loading before rendering components
+  useEffect(() => {
+    if (!registryLoaded) {
+      registry.loadPromise.then(() => setRegistryLoaded(true));
+    }
+  }, [registry, registryLoaded]);
 
   // Component selection
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
@@ -454,7 +462,7 @@ export const SimulatorCanvas = () => {
           />
 
           {/* Components using wokwi-elements */}
-          <div className="components-area">{components.map(renderComponent)}</div>
+          <div className="components-area">{registryLoaded && components.map(renderComponent)}</div>
         </div>
       </div>
 

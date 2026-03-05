@@ -17,6 +17,7 @@ export class ComponentRegistry {
   private categories: Map<ComponentCategory, ComponentMetadata[]> = new Map();
   private allComponents: ComponentMetadata[] = [];
   private loaded = false;
+  private _loadPromise: Promise<void> | null = null;
 
   private constructor() {}
 
@@ -35,6 +36,23 @@ export class ComponentRegistry {
    */
   async load(): Promise<void> {
     if (this.loaded) return;
+    if (this._loadPromise) return this._loadPromise;
+    this._loadPromise = this._doLoad();
+    return this._loadPromise;
+  }
+
+  /**
+   * Returns the load promise so consumers can await registry readiness
+   */
+  get loadPromise(): Promise<void> {
+    return this._loadPromise ?? this.load();
+  }
+
+  get isLoaded(): boolean {
+    return this.loaded;
+  }
+
+  private async _doLoad(): Promise<void> {
 
     try {
       const response = await fetch('/components-metadata.json');

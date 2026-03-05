@@ -594,6 +594,113 @@ void loop() {
     ],
   },
   {
+    id: 'tft-display',
+    title: 'TFT ILI9341 Display',
+    description: 'Color TFT display demo: fills, text, and a bouncing ball animation using the Arduino TFT library',
+    category: 'displays',
+    difficulty: 'intermediate',
+    code: `// TFT ILI9341 Display Demo
+// Library: TFT by Arduino, Adafruit
+// Connect: CS=10, DC/RS=9, RST=8, LED=7, MOSI=11(SPI), SCK=13(SPI)
+
+#include <TFT.h>
+#include <SPI.h>
+
+#define TFT_CS   10
+#define TFT_DC    9
+#define TFT_RST   8
+#define TFT_LED   7
+
+TFT TFTscreen = TFT(TFT_CS, TFT_DC, TFT_RST);
+
+int ballX = 64, ballY = 90;
+int ballDX = 3, ballDY = 2;
+const int BALL_R = 8;
+
+void drawStaticUI() {
+  // Background
+  TFTscreen.background(0, 0, 50);
+
+  // Title
+  TFTscreen.setTextSize(2);
+  TFTscreen.stroke(255, 220, 0);
+  TFTscreen.text("WOKWI TFT", 5, 5);
+
+  // Subtitle
+  TFTscreen.setTextSize(1);
+  TFTscreen.stroke(180, 180, 255);
+  TFTscreen.text("ILI9341 Demo", 12, 28);
+
+  // Color palette bars
+  TFTscreen.noStroke();
+  TFTscreen.fill(220, 50, 50);
+  TFTscreen.rect(5, 45, 36, 14);
+  TFTscreen.fill(50, 200, 50);
+  TFTscreen.rect(45, 45, 36, 14);
+  TFTscreen.fill(50, 100, 240);
+  TFTscreen.rect(85, 45, 36, 14);
+
+  // Play-field border
+  TFTscreen.stroke(80, 80, 130);
+  TFTscreen.noFill();
+  TFTscreen.rect(2, 68, 124, 88);
+}
+
+void setup() {
+  pinMode(TFT_LED, OUTPUT);
+  digitalWrite(TFT_LED, HIGH);   // Backlight on
+
+  TFTscreen.begin();
+  drawStaticUI();
+}
+
+void loop() {
+  // Erase old ball
+  TFTscreen.noStroke();
+  TFTscreen.fill(0, 0, 50);
+  TFTscreen.circle(ballX, ballY, BALL_R);
+
+  // Update position
+  ballX += ballDX;
+  ballY += ballDY;
+
+  // Bounce off field borders
+  if (ballX < 3  + BALL_R || ballX > 124 - BALL_R) ballDX = -ballDX;
+  if (ballY < 69 + BALL_R || ballY > 155 - BALL_R) ballDY = -ballDY;
+
+  // Draw ball
+  TFTscreen.fill(255, 140, 0);
+  TFTscreen.circle(ballX, ballY, BALL_R);
+
+  delay(30);
+}
+`,
+    components: [
+      {
+        type: 'wokwi-arduino-uno',
+        id: 'arduino-uno',
+        x: 80,
+        y: 220,
+        properties: {},
+      },
+      {
+        type: 'wokwi-ili9341',
+        id: 'tft1',
+        x: 480,
+        y: 60,
+        properties: {},
+      },
+    ],
+    wires: [
+      { id: 'w-sck',  start: { componentId: 'arduino-uno', pinName: '13' }, end: { componentId: 'tft1', pinName: 'SCK'  }, color: '#ff8800' },
+      { id: 'w-mosi', start: { componentId: 'arduino-uno', pinName: '11' }, end: { componentId: 'tft1', pinName: 'MOSI' }, color: '#ff8800' },
+      { id: 'w-cs',   start: { componentId: 'arduino-uno', pinName: '10' }, end: { componentId: 'tft1', pinName: 'CS'   }, color: '#00aaff' },
+      { id: 'w-dc',   start: { componentId: 'arduino-uno', pinName: '9'  }, end: { componentId: 'tft1', pinName: 'D/C'  }, color: '#00cc00' },
+      { id: 'w-rst',  start: { componentId: 'arduino-uno', pinName: '8'  }, end: { componentId: 'tft1', pinName: 'RST'  }, color: '#cc0000' },
+      { id: 'w-led',  start: { componentId: 'arduino-uno', pinName: '7'  }, end: { componentId: 'tft1', pinName: 'LED'  }, color: '#ffffff' },
+    ],
+  },
+  {
     id: 'lcd-hello',
     title: 'LCD 20x4 Display',
     description: 'Display text on a 20x4 LCD using the LiquidCrystal library',

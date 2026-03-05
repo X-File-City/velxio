@@ -1,4 +1,4 @@
-import { CPU, AVRTimer, timer0Config, timer1Config, timer2Config, AVRUSART, usart0Config, AVRIOPort, portBConfig, portCConfig, portDConfig, avrInstruction, AVRADC, adcConfig } from 'avr8js';
+import { CPU, AVRTimer, timer0Config, timer1Config, timer2Config, AVRUSART, usart0Config, AVRIOPort, portBConfig, portCConfig, portDConfig, avrInstruction, AVRADC, adcConfig, AVRSPI, spiConfig } from 'avr8js';
 import { PinManager } from './PinManager';
 import { hexToUint8Array } from '../utils/hexParser';
 
@@ -33,6 +33,7 @@ export class AVRSimulator {
   private portC: AVRIOPort | null = null;
   private portD: AVRIOPort | null = null;
   private adc: AVRADC | null = null;
+  public spi: AVRSPI | null = null;
   private program: Uint16Array | null = null;
   private running = false;
   private animationFrame: number | null = null;
@@ -72,11 +73,18 @@ export class AVRSimulator {
     this.cpu = new CPU(this.program);
 
     // Initialize peripherals (kept alive so their CPU hooks are not GC'd)
+    this.spi = new AVRSPI(this.cpu, spiConfig, 16000000);
+    // Default onByte: complete transfer immediately (no external device)
+    this.spi.onByte = (value) => {
+      this.spi!.completeTransfer(value);
+    };
+
     this.peripherals = [
       new AVRTimer(this.cpu, timer0Config),
       new AVRTimer(this.cpu, timer1Config),
       new AVRTimer(this.cpu, timer2Config),
       new AVRUSART(this.cpu, usart0Config, 16000000),
+      this.spi,
     ];
 
     // Initialize ADC (analogRead support)

@@ -214,7 +214,7 @@ export const DynamicComponent: React.FC<DynamicComponentProps> = ({
       el.removeEventListener('button-press', onButtonPress);
       el.removeEventListener('button-release', onButtonRelease);
     };
-  }, [id, handleComponentEvent, metadata.id, simulator]);
+  }, [id, handleComponentEvent, metadata.id, simulator, running]);
 
   return (
     <div
