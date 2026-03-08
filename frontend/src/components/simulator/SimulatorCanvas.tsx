@@ -294,13 +294,13 @@ export const SimulatorCanvas = () => {
       const world = toWorld(e.clientX, e.clientY);
       if (draggedComponentId === '__board__') {
         setBoardPosition({
-          x: Math.max(0, world.x - dragOffset.x),
-          y: Math.max(0, world.y - dragOffset.y),
+          x: world.x - dragOffset.x,
+          y: world.y - dragOffset.y,
         });
       } else {
         updateComponent(draggedComponentId, {
-          x: Math.max(0, world.x - dragOffset.x),
-          y: Math.max(0, world.y - dragOffset.y),
+          x: world.x - dragOffset.x,
+          y: world.y - dragOffset.y,
         } as any);
       }
     }
