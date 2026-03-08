@@ -439,6 +439,37 @@ export const SimulatorCanvas = () => {
     return () => timers.forEach(t => clearTimeout(t));
   }, [components, recalculateAllWirePositions]);
 
+  // Auto-pan to keep the board visible after a project import/load.
+  // We track the previous component count and only re-center when the count
+  // jumps (indicating the user loaded a new circuit, not just added one part).
+  const prevComponentCountRef = useRef(-1);
+  useEffect(() => {
+    const prev = prevComponentCountRef.current;
+    const curr = components.length;
+    prevComponentCountRef.current = curr;
+
+    // Only re-center when the component list transitions from empty/different
+    // project to a populated one (i.e., a load/import event).
+    const isLoad = curr > 0 && (prev <= 0 || Math.abs(curr - prev) > 2);
+    if (!isLoad) return;
+
+    const timer = setTimeout(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const currentZoom = zoomRef.current;
+      const newPan = {
+        x: rect.width  / 4 - boardPosition.x * currentZoom,
+        y: rect.height / 4 - boardPosition.y * currentZoom,
+      };
+      panRef.current = newPan;
+      setPan(newPan);
+    }, 150);
+
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [components.length]);
+
   // Render component using dynamic renderer
   const renderComponent = (component: any) => {
     const metadata = registry.getById(component.metadataId);

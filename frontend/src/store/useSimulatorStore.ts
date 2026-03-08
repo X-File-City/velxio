@@ -497,6 +497,11 @@ export const useSimulatorStore = create<SimulatorState>((set, get) => {
         );
         if (startPos) {
           updated.start = { ...wire.start, x: startPos.x, y: startPos.y };
+        } else {
+          // Pin name not found in element's pinInfo (e.g. board type mismatch).
+          // Fall back to the component/board position so the wire renders near
+          // its endpoint rather than at the canvas origin (0,0).
+          updated.start = { ...wire.start, x: startX, y: startY };
         }
 
         // Resolve end component position
@@ -512,6 +517,8 @@ export const useSimulatorStore = create<SimulatorState>((set, get) => {
         );
         if (endPos) {
           updated.end = { ...wire.end, x: endPos.x, y: endPos.y };
+        } else {
+          updated.end = { ...wire.end, x: endX, y: endY };
         }
 
         // Auto-generate control points for wires that have none

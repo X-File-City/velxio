@@ -74,6 +74,22 @@ const BOARD_TO_WOKWI_ID: Record<string, string> = {
   'raspberry-pi-pico': 'pico',
 };
 
+// ── Pin name aliases ─────────────────────────────────────────────────────────
+
+// Maps Wokwi connection "signal" pin names to wokwi-element physical pin names.
+// Wokwi boards (e.g. board-ssd1306) use different naming than the bare elements.
+const COMPONENT_PIN_ALIASES: Record<string, Record<string, string>> = {
+  'ssd1306': {
+    'SDA': 'DATA',
+    'SCL': 'CLK',
+    'VCC': 'VIN',
+  },
+};
+
+function normalizePinName(metadataId: string, pinName: string): string {
+  return COMPONENT_PIN_ALIASES[metadataId]?.[pinName] ?? pinName;
+}
+
 // ── Color helpers ─────────────────────────────────────────────────────────────
 
 const COLOR_NAME_TO_HEX: Record<string, string> = {
@@ -205,20 +221,27 @@ export async function importFromWokwiZip(file: File): Promise<ImportResult> {
   };
   const velxioBoardId = VELXIO_BOARD_ID[boardType] ?? 'arduino-uno';
 
-  // Board position from diagram (use directly as Velxio board position)
+  // Board position from diagram. Apply a minimum offset so the board is never
+  // crammed against the canvas top-left corner (Wokwi diagrams often use 0,0).
+  const MIN_OFFSET = 50;
+  const rawBoardX = boardPart?.left ?? MIN_OFFSET;
+  const rawBoardY = boardPart?.top ?? MIN_OFFSET;
+  const offsetX = rawBoardX < MIN_OFFSET ? MIN_OFFSET - rawBoardX : 0;
+  const offsetY = rawBoardY < MIN_OFFSET ? MIN_OFFSET - rawBoardY : 0;
   const boardPosition = {
-    x: boardPart?.left ?? 50,
-    y: boardPart?.top ?? 50,
+    x: rawBoardX + offsetX,
+    y: rawBoardY + offsetY,
   };
 
-  // Convert non-board parts to Velxio components (use Wokwi coords directly)
+  // Convert non-board parts to Velxio components.
+  // Apply the same offset so components keep their relative position to the board.
   const components: VelxioComponent[] = diagram.parts
     .filter((p) => !WOKWI_TYPE_TO_BOARD[p.type])
     .map((p) => ({
       id: p.id,
       metadataId: wokwiTypeToMetadataId(p.type),
-      x: p.left,
-      y: p.top,
+      x: p.left + offsetX,
+      y: p.top + offsetY,
       properties: { ...p.attrs },
     }));
 
@@ -236,10 +259,17 @@ export async function importFromWokwiZip(file: File): Promise<ImportResult> {
     const startId = startCompRaw === boardId ? velxioBoardId : startCompRaw;
     const endId = endCompRaw === boardId ? velxioBoardId : endCompRaw;
 
+    // Normalize pin names: Wokwi uses signal names (SDA, SCL, VCC) while
+    // wokwi-elements use physical/board pin names (DATA, CLK, VIN).
+    const startMetadataId = components.find((c) => c.id === startId)?.metadataId ?? '';
+    const endMetadataId = components.find((c) => c.id === endId)?.metadataId ?? '';
+    const normalizedStartPin = normalizePinName(startMetadataId, startPin);
+    const normalizedEndPin = normalizePinName(endMetadataId, endPin);
+
     return {
       id: `wire-${i}-${Date.now()}`,
-      start: { componentId: startId, pinName: startPin, x: 0, y: 0 },
-      end: { componentId: endId, pinName: endPin, x: 0, y: 0 },
+      start: { componentId: startId, pinName: normalizedStartPin, x: 0, y: 0 },
+      end: { componentId: endId, pinName: normalizedEndPin, x: 0, y: 0 },
       controlPoints: [],
       color: colorToHex(color),
       signalType: 'digital' as const,
