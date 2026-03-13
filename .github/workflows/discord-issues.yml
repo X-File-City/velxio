@@ -8,9 +8,8 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send issue to Discord
+      - name: Build Discord payload
         env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_ISSUES }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_URL: ${{ github.event.issue.html_url }}
@@ -22,7 +21,7 @@ jobs:
           LABELS_JSON: ${{ toJson(github.event.issue.labels) }}
         run: |
           python3 - <<'PYEOF'
-          import json, os, urllib.request
+          import json, os
 
           number     = os.environ["ISSUE_NUMBER"]
           title      = os.environ["ISSUE_TITLE"]
@@ -32,14 +31,11 @@ jobs:
           avatar     = os.environ["ISSUE_AVATAR"]
           repo       = os.environ["REPO"]
           created_at = os.environ["ISSUE_CREATED_AT"]
-          webhook    = os.environ["DISCORD_WEBHOOK"]
 
-          # Truncate body
           short_body = body[:300] + ("..." if len(body) > 300 else "")
           if not short_body.strip():
               short_body = "*(no description)*"
 
-          # Labels
           try:
               labels_raw = json.loads(os.environ.get("LABELS_JSON", "[]"))
               labels = ", ".join(f"`{l['name']}`" for l in labels_raw) if labels_raw else "*(none)*"
@@ -54,16 +50,8 @@ jobs:
                   "description": short_body,
                   "color": 0xE74C3C,
                   "fields": [
-                      {
-                          "name": "📦 Repository",
-                          "value": f"[`{repo}`](https://github.com/{repo})",
-                          "inline": True
-                      },
-                      {
-                          "name": "🏷️ Labels",
-                          "value": labels,
-                          "inline": True
-                      }
+                      {"name": "📦 Repository", "value": f"[`{repo}`](https://github.com/{repo})", "inline": True},
+                      {"name": "🏷️ Labels",    "value": labels, "inline": True}
                   ],
                   "author": {
                       "name": user,
@@ -75,18 +63,24 @@ jobs:
               }]
           }
 
-          data = json.dumps(payload).encode()
-          req = urllib.request.Request(
-              webhook,
-              data=data,
-              headers={"Content-Type": "application/json"},
-              method="POST"
-          )
-          try:
-              with urllib.request.urlopen(req) as resp:
-                  print(f"Discord response: {resp.status}")
-          except urllib.error.HTTPError as e:
-              body_err = e.read().decode()
-              print(f"Discord error: {e.code} {e.reason} — {body_err}")
-              raise SystemExit(1)
+          with open("/tmp/discord_payload.json", "w") as f:
+              json.dump(payload, f)
           PYEOF
+
+      - name: Send to Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_ISSUES }}
+        run: |
+          HTTP_STATUS=$(curl -s -o /tmp/discord_response.txt -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            --data @/tmp/discord_payload.json \
+            "$DISCORD_WEBHOOK")
+
+          echo "Discord response: $HTTP_STATUS"
+          cat /tmp/discord_response.txt
+
+          if [ "$HTTP_STATUS" -ne 204 ]; then
+            echo "::error::Discord webhook failed with status $HTTP_STATUS"
+            exit 1
+          fi
