@@ -1,0 +1,229 @@
+{
+  "id": "velxio-onboarding",
+  "title": "Velxio Arduino Emulator",
+  "description": "A guided tour of Velxio — a fully local, open-source Arduino emulator with React frontend, FastAPI backend, and real AVR8/RP2040 emulation powered by Wokwi libraries.",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "id": "overview",
+      "title": "Welcome to Velxio",
+      "description": "Velxio is a full-stack Arduino emulator. The frontend (React + Vite + TypeScript) provides a Monaco code editor and visual simulation canvas. The backend (FastAPI + Python) compiles Arduino sketches via arduino-cli. Real AVR8 and RP2040 emulation runs entirely in the browser using Wokwi open-source libraries.",
+      "focusDirectory": "",
+      "colorMode": "fileTypes"
+    },
+    {
+      "id": "frontend-core",
+      "title": "Frontend Application Core",
+      "description": "The frontend is a React + TypeScript app built with Vite. App.tsx sets up routing, main.tsx is the entry point, and the pages/ directory contains route-level components like the editor, landing page, auth pages, and user profiles.",
+      "focusDirectory": "frontend/src",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "entry-points",
+          "name": "Entry Points",
+          "color": "#3b82f6",
+          "items": [
+            { "path": "frontend/src/App.tsx", "type": "file" },
+            { "path": "frontend/src/main.tsx", "type": "file" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "pages",
+          "name": "Pages",
+          "color": "#8b5cf6",
+          "items": [
+            { "path": "frontend/src/pages", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        }
+      ]
+    },
+    {
+      "id": "state-management",
+      "title": "Zustand State Management",
+      "description": "Application state is managed with Zustand stores. useEditorStore handles the multi-file workspace (files, tabs, active file). useSimulatorStore tracks simulation state, components, wires, and compiled hex. useAuthStore persists auth state in localStorage. useProjectStore tracks the current project being edited.",
+      "focusDirectory": "frontend/src/store",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "stores",
+          "name": "Zustand Stores",
+          "color": "#f59e0b",
+          "items": [
+            { "path": "frontend/src/store/useEditorStore.ts", "type": "file" },
+            { "path": "frontend/src/store/useSimulatorStore.ts", "type": "file" },
+            { "path": "frontend/src/store/useAuthStore.ts", "type": "file" },
+            { "path": "frontend/src/store/useProjectStore.ts", "type": "file" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        }
+      ]
+    },
+    {
+      "id": "editor-ui",
+      "title": "Code Editor & File Management",
+      "description": "The editor/ directory contains the Monaco-based code editor with multi-file support. CodeEditor.tsx renders Monaco with per-file undo history. FileExplorer.tsx provides the sidebar file tree with rename, delete, and save. FileTabs.tsx manages open file tabs with unsaved-change indicators. EditorToolbar.tsx has the compile, run, and stop buttons.",
+      "focusDirectory": "frontend/src/components/editor",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "editor-components",
+          "name": "Editor Components",
+          "color": "#10b981",
+          "items": [
+            { "path": "frontend/src/components/editor", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        }
+      ]
+    },
+    {
+      "id": "simulation-engine",
+      "title": "AVR & RP2040 Simulation Engine",
+      "description": "The simulation/ directory is the heart of Velxio. AVRSimulator.ts wraps the avr8js CPU emulator — it loads hex files, runs the 16MHz execution loop at ~60 FPS, and fires port listeners when GPIO registers change. PinManager.ts maps Arduino pins to visual components (e.g., pin 13 → built-in LED). RP2040Simulator.ts provides similar support for Raspberry Pi Pico boards.",
+      "focusDirectory": "frontend/src/simulation",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "sim-core",
+          "name": "Simulation Core",
+          "color": "#ef4444",
+          "items": [
+            { "path": "frontend/src/simulation/AVRSimulator.ts", "type": "file" },
+            { "path": "frontend/src/simulation/PinManager.ts", "type": "file" },
+            { "path": "frontend/src/simulation/RP2040Simulator.ts", "type": "file" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        }
+      ]
+    },
+    {
+      "id": "wokwi-components",
+      "title": "Visual Electronic Components",
+      "description": "Velxio renders 48+ electronic components (LEDs, resistors, buttons, displays, etc.) using Wokwi Web Components. The components-wokwi/ directory contains React wrappers for these custom elements. The simulator/ directory has SimulatorCanvas.tsx which renders the visual canvas, component picker, and board selector. DynamicComponent.tsx handles dynamic rendering of any component type.",
+      "focusDirectory": "frontend/src/components",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "wokwi-wrappers",
+          "name": "Wokwi Wrappers",
+          "color": "#06b6d4",
+          "items": [
+            { "path": "frontend/src/components/components-wokwi", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "simulator-canvas",
+          "name": "Simulator Canvas",
+          "color": "#ec4899",
+          "items": [
+            { "path": "frontend/src/components/simulator", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        }
+      ]
+    },
+    {
+      "id": "backend-api",
+      "title": "Backend API (FastAPI + Python)",
+      "description": "The backend is a FastAPI application that handles Arduino code compilation, authentication, and project persistence. The api/routes/ directory contains endpoints for compilation (compile.py), auth (auth.py), projects (projects.py), and library management (libraries.py). The core/ directory has configuration, JWT security, and dependency injection.",
+      "focusDirectory": "backend/app",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "api-routes",
+          "name": "API Routes",
+          "color": "#f97316",
+          "items": [
+            { "path": "backend/app/api/routes", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "backend-core",
+          "name": "Core (Config, Security)",
+          "color": "#6366f1",
+          "items": [
+            { "path": "backend/app/core", "type": "directory" },
+            { "path": "backend/app/main.py", "type": "file" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        }
+      ]
+    },
+    {
+      "id": "wokwi-libs",
+      "title": "Wokwi Open-Source Libraries",
+      "description": "Velxio uses local clones of official Wokwi repositories instead of npm packages. avr8js/ provides the AVR8 CPU emulator that runs Arduino sketches in the browser. wokwi-elements/ contains the Web Components for visual electronic parts. rp2040js/ provides RP2040 (Raspberry Pi Pico) emulation. Vite aliases in vite.config.ts resolve imports to these local builds.",
+      "focusDirectory": "wokwi-libs",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "emulation-libs",
+          "name": "Emulation Libraries",
+          "color": "#14b8a6",
+          "items": [
+            { "path": "wokwi-libs/avr8js", "type": "directory" },
+            { "path": "wokwi-libs/rp2040js", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "elements-lib",
+          "name": "Visual Components Library",
+          "color": "#a855f7",
+          "items": [
+            { "path": "wokwi-libs/wokwi-elements", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        }
+      ]
+    },
+    {
+      "id": "data-flow-summary",
+      "title": "End-to-End Data Flow",
+      "description": "Here's how it all connects: (1) User writes Arduino code in Monaco Editor → stored in useEditorStore. (2) Compile button sends files to the FastAPI backend → arduino-cli produces a .hex file. (3) The hex file is loaded into AVRSimulator → parsed into CPU instructions. (4) The 60 FPS execution loop runs CPU cycles → port listeners fire on GPIO changes. (5) PinManager maps pin state changes to visual components → React re-renders wokwi-elements on the canvas. The frontend services/ directory bridges the API calls between frontend stores and backend endpoints.",
+      "focusDirectory": "",
+      "colorMode": "fileTypes",
+      "highlightLayers": [
+        {
+          "id": "data-flow-frontend",
+          "name": "Frontend Data Flow",
+          "color": "#3b82f6",
+          "items": [
+            { "path": "frontend/src/store/useEditorStore.ts", "type": "file" },
+            { "path": "frontend/src/services/compilation.ts", "type": "file" },
+            { "path": "frontend/src/simulation/AVRSimulator.ts", "type": "file" },
+            { "path": "frontend/src/simulation/PinManager.ts", "type": "file" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        },
+        {
+          "id": "data-flow-backend",
+          "name": "Backend Compilation",
+          "color": "#ef4444",
+          "items": [
+            { "path": "backend/app/api/routes/compile.py", "type": "file" },
+            { "path": "backend/app/services", "type": "directory" }
+          ],
+          "opacity": 0.7,
+          "renderStrategy": "border"
+        }
+      ]
+    }
+  ]
+}
